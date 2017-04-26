@@ -1,0 +1,44 @@
+<project name="SNAKE-AI" default="compile" basedir=".">
+
+  <description>
+    A build file for the Snake-AI project
+  </description>
+
+  <property name="src" location="src"/>
+  <property name="build" location="build"/>
+
+  <path id="compile.class.path"/>
+
+  <path id="run.class.path">
+    <path refid="compile.class.path"/>
+    <pathelement location="${build}"/>
+  </path>
+
+  <target name="init">
+    <!-- Timestamp -->
+    <tstamp/>
+
+    <mkdir dir="${build}"/>
+  </target>
+
+  <target name="compile" depends="init" description="Compile source">
+    <javac srcdir="${src}" destdir="${build}" debug="off">
+      <classpath refid="compile.class.path"/>
+    </javac>
+
+    <copy todir="${build}/META-INF">
+      <fileset dir="${src}" includes="MANIFEST.MF"/>
+    </copy>
+  </target>
+
+  <target name="clean">
+    <delete dir="${build}"/>
+  </target>
+
+  <target name="run" depends="compile">
+    <java classname="HumanPlayer" fork="yes">
+      <classpath refid="run.class.path"/>
+    </java>
+  </target>
+
+</project>

@@ -6,9 +6,9 @@ The neuroevolutionary process is described in this paper: http://nn.cs.utexas.ed
 A collaborative project between Xeno Fish, Robert Shelton, and Thomas Gagne as part of the 2017 Spring Artificial Intelligence course at the University of Puget Sound.
 
 # Usage
-Currently, you can navigate to the src/ directory and run
+Building the project requires ant, and the project can be compiled and run with
 ```
-javac HumanPlayer.java
-java HumanPlayer
+ant
+ant run
 ```
 to use the version of snake playable by humans.
