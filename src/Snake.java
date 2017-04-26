@@ -1,6 +1,11 @@
 import java.util.Random;
 import java.util.LinkedList;
 
+/**
+ * Embodies a game of snake
+ * Includes all the relevant information about the game state,
+ * and includes a step() method for advancing the game
+ */
 public class Snake {
 
     public enum Direction {
@@ -8,12 +13,6 @@ public class Snake {
         DOWN,
         LEFT,
         RIGHT
-    };
-
-    public enum Input {
-        LEFT,
-        RIGHT,
-        NOTHING
     };
 
     // FINAL STATIC VALUES
@@ -58,7 +57,7 @@ public class Snake {
         direction = Direction.UP;
 
         appleX = rand.nextInt(BOARD_SIZE);
-        appleY = rand.nextInt(BOARD_SIZE);
+        appleY = rand.nextInt(BOARD_SIZE - 1) + 1;
 
         // Prevent the apple from spawning on top of the snake
         if(appleX == 15) {
@@ -73,40 +72,18 @@ public class Snake {
 
     // Advance the game by one tick, given the user's input
     // Contains the game's core logic
-    public void step(Input input) {
+    public void step(Direction input) {
 
         // Change the snake's direction depending on the user's input
-        switch(input) {
-        case LEFT:
-            if(direction == Direction.UP) {
-                direction = Direction.LEFT;
-            } else if(direction == Direction.DOWN) {
-                direction = Direction.RIGHT;
-            } else if(direction == Direction.RIGHT) {
-                direction = Direction.UP;
-            } else {
-                direction = Direction.DOWN;
-            }
-            break;
-
-        case RIGHT:
-            if(direction == Direction.UP) {
-                direction = Direction.RIGHT;
-            } else if(direction == Direction.DOWN) {
-                direction = Direction.LEFT;
-            } else if(direction == Direction.RIGHT) {
-                direction = Direction.DOWN;
-            } else {
-                direction = Direction.UP;
-            }
-            break;
-
-        case NOTHING:
-            break;
+        // Don't let the snake move in the direction opposite it's traveling though
+        if((direction == Direction.LEFT && input != Direction.RIGHT) ||
+           (direction == Direction.RIGHT && input != Direction.LEFT) ||
+           (direction == Direction.DOWN && input != Direction.UP) ||
+           (direction == Direction.UP && input != Direction.DOWN)) {
+            direction = input;
         }
 
         if(!lost) {
-
             // Move the snake forward
             switch(direction) {
             case UP:
