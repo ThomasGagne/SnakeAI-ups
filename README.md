@@ -9,6 +9,6 @@ A collaborative project between Xeno Fish, Robert Shelton, and Thomas Gagne as p
 Building the project requires ant, and the project can be compiled and run with
 ```
 ant
-ant run
+ant human
 ```
 to use the version of snake playable by humans.

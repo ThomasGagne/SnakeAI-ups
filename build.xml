@@ -35,7 +35,7 @@
     <delete dir="${build}"/>
   </target>
 
-  <target name="run" depends="compile">
+  <target name="human" depends="compile">
     <java classname="HumanPlayer" fork="yes">
       <classpath refid="run.class.path"/>
     </java>
