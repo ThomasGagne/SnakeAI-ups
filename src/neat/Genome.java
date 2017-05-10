@@ -92,7 +92,8 @@ public class Genome {
         newGene1.output = newNode;
         newGene1.weight = 1.0;
         newGene1.enabled = true;
-        genePool.genes.add(newGene1);
+        //genePool.genes.add(newGene1);
+        newGene1.innovation = genePool.getNewInnovation(newGene1);
         connections.add(newGene1);
 
         ConnectionGene newGene2 = new ConnectionGene(oldGene);
@@ -138,7 +139,8 @@ public class Genome {
 
         } while(!containsLink(newGene)); //do until we get a new link
 
-        genePool.genes.add(newGene);
+        //genePool.genes.add(newGene);
+        newGene.innovation = genePool.getNewInnovation(newGene);
         connections.add(newGene);
     }
 
