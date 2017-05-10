@@ -230,5 +230,8 @@ public class Genome implements Comparable{
     public int compareTo(Genome g2){
       return this.fitness-g2.fitness;
     }
+    public boolean sameSpecies(){
+      return true;
+    }
 
 }
