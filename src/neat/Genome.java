@@ -8,7 +8,7 @@ import java.util.Iterator;
  * A class to embody a single genome in the genetic algorithm
  *
  */
-public class Genome {
+public class Genome implements Comparable{
 
     // The list of all the node genes
     // The structure has the first `inputs` nodes being input nodes and the last `outputs` nodes being outputs
@@ -24,6 +24,7 @@ public class Genome {
 
     // The stored fitness
     public int fitness = -1;
+    public int globalRank;
     public Hashmap<String,Float> mutationRates;
     public float PERTURB_CHANCE = 0.90;
     public GenePool g;
@@ -188,6 +189,9 @@ public class Genome {
         p--;
       }
       return this;
+    }
+    public int compareTo(Genome g2){
+      return this.fitness-g2.fitness;
     }
 
 }
