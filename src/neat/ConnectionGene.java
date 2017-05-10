@@ -6,9 +6,20 @@ public class ConnectionGene {
     // The output node to this connection
     public NodeGene output;
     // The weight of the connection
-    public float weight;
+    public double weight;
     // Whether or not this connection is enabled
     public boolean enabled;
     // The innovation number of this connection gene
-  //replaced by position in GenePool  public int innovation;
+    public int innovation;
+
+    public ConnectionGene() {}
+
+    // Clone constructor
+    public ConnectionGene(ConnectionGene cloneFrom) {
+        input = cloneFrom.input;
+        output = cloneFrom.output;
+        weight = cloneFrom.weight;
+        enabled = cloneFrom.enabled;
+        innovation = cloneFrom.innovation;
+    }
 }
