@@ -6,9 +6,9 @@ public class ConnectionGene {
     // The output node to this connection
     public NodeGene output;
     // The weight of the connection
-    public int weight;
+    public float weight;
     // Whether or not this connection is enabled
     public boolean enabled;
     // The innovation number of this connection gene
-    public int innovation;
+  //replaced by position in GenePool  public int innovation;
 }
