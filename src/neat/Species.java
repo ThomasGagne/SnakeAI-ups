@@ -57,9 +57,10 @@ public class Species {
       }
       else
       {
-        for(int i = 0; i < genomes.size() / 2; i++)
+        for(int i = 0; i < genomes.size(); i++)
         {
-          genomes.remove((genomes.size() - 1) - i);
+          if(genomes.get(i).fitness < this.calculateAverageFitness)
+            genomes.remove(i);
         }
       }
     }
