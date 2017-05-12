@@ -1,6 +1,6 @@
 import java.util.ArrayList;
 
-public class NodeGene {
+public class NodeGene implements Comparable {
 
     // The number of the given node
     public int number;
@@ -10,16 +10,23 @@ public class NodeGene {
 
     // All input nodes feeding into this NodeGene
     // Not filled until network computation occurs
-    public ArrayList<NodeGene> inputs;
+    public ArrayList<NodeGene> inputs = new ArrayList<NodeGene>();
 
     public boolean hasBeenComputed = false;
 
+    public boolean isOutput = false;
+
     public NodeGene(int number) {
         this.number = number;
-        inputs = new ArrayList<NodeGene>();
     }
 
     public NodeGene(NodeGene nodeGene) {
         this.number = nodeGene.number;
+        this.isOutput = nodeGene.isOutput;
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        return this.number - ((NodeGene)o).number;
     }
 }

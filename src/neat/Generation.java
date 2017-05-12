@@ -6,11 +6,25 @@ import java.util.Collections;
 
 public class Generation{
 
-    public int STALE_CUTOFF = 15;
-    public int POPULATION = 300;
+    public int STALE_CUTOFF = 1;
+    public int POPULATION = 100;
     public int maxFitness;
     public Random rand = new Random();
     public LinkedList<Species> species = new LinkedList<Species>();
+    public GenePool genePool = new GenePool();
+
+    public int snakeSeed;
+
+    public Generation(int snakeSeed) {
+        this.snakeSeed = snakeSeed;
+
+        for(int i = 0; i < POPULATION; i++) {
+            Genome g = new Genome(genePool);
+            g.mutate();
+            g.evaluateNetwork(snakeSeed);
+            addToSpecies(g);
+        }
+    }
 
     public void rankGlobally() {
         LinkedList<Genome> ranker = new LinkedList<Genome>();
@@ -67,8 +81,8 @@ public class Generation{
         species = survived;
     }
 
-    public Generation createNextGeneration(List<Species> species, int maxFitness) {
-        this.maxFitness=maxFitness;
+    public Generation createNextGeneration(int maxFitness) {
+        this.maxFitness = maxFitness;
 
         for(int i = 0; i < species.size(); i++) {
             species.get(i).cull(false);
@@ -107,6 +121,15 @@ public class Generation{
         for(int i = 0; i < children.size(); i++) {
             addToSpecies(children.get(i));
         }
+
+        // Evaluate fitness of all children
+        for(int i = 0; i < species.size(); i++) {
+            for(int j = 0; j < species.get(i).genomes.size(); j++) {
+                species.get(i).genomes.get(j).evaluateNetwork(snakeSeed);
+            }
+        }
+
+        //snakeSeed++;
 
         return this;
     }

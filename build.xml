@@ -22,7 +22,7 @@
   </target>
 
   <target name="compile" depends="init" description="Compile source">
-    <javac srcdir="${src}" destdir="${build}" debug="off">
+    <javac srcdir="${src}" destdir="${build}" debug="true">
       <classpath refid="compile.class.path"/>
     </javac>
 
@@ -37,6 +37,12 @@
 
   <target name="human" depends="compile">
     <java classname="HumanPlayer" fork="yes">
+      <classpath refid="run.class.path"/>
+    </java>
+  </target>
+
+  <target name="neat" depends="compile">
+    <java classname="NEAT" fork="yes">
       <classpath refid="run.class.path"/>
     </java>
   </target>

@@ -4,6 +4,8 @@ import java.util.Random;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.Iterator;
+import java.util.Collections;
+
 /**
  * A class to embody a single genome in the genetic algorithm
  *
@@ -13,7 +15,7 @@ public class Genome implements Comparable{
     // CONSTANTS
     public static double PERTURB_CHANCE = 0.90;
     // Should be odd
-    public static int SNAKE_VIEW_SIZE = 9;
+    public static int SNAKE_VIEW_SIZE = 5;
     // The number of steps the snake can go without getting the apple before we kill it
     public static int TOO_LONG_ALIVE = 1000;
 
@@ -22,10 +24,10 @@ public class Genome implements Comparable{
     public LinkedList<NodeGene> nodes;
 
     // An index indicating the last input node in `nodes`
-    public int inputs;
+    public int inputs = (SNAKE_VIEW_SIZE * SNAKE_VIEW_SIZE) + 2 - 1;
     // An index indicating the last output node in `nodes`
     // Note that `inputs + 1` is the index of the first output node
-    public int outputs;
+    public int outputs = (SNAKE_VIEW_SIZE * SNAKE_VIEW_SIZE) + 5 - 1;
 
     // The list of all connection genes
     public LinkedList<ConnectionGene> connections;
@@ -52,14 +54,28 @@ public class Genome implements Comparable{
         nodes = new LinkedList<NodeGene>();
 
         // Add all the sensor and output nodes
-        // We have (SNAKE_VIEW_SIZE * SNAKE_VIEW_SIZE) snake view nodes, 4 apple indicator nodes, and 2 output nodes
-        for(int i = 0; i < (SNAKE_VIEW_SIZE * SNAKE_VIEW_SIZE) + 6; i++) {
+        // We have (SNAKE_VIEW_SIZE * SNAKE_VIEW_SIZE) snake view nodes, 2 apple indicator nodes, and 2 output nodes
+        for(int i = 0; i < (SNAKE_VIEW_SIZE * SNAKE_VIEW_SIZE) + 2; i++) {
             NodeGene inputNode = new NodeGene(i);
             nodes.add(inputNode);
         }
 
-        inputs = (SNAKE_VIEW_SIZE * SNAKE_VIEW_SIZE) + 4;
-        outputs = (SNAKE_VIEW_SIZE * SNAKE_VIEW_SIZE) + 6;
+        // Output nodes
+        // Left, right, and straight
+        NodeGene inputNode = new NodeGene(Integer.MAX_VALUE - 1);
+        inputNode.isOutput = true;
+        nodes.add(inputNode);
+        inputNode = new NodeGene(Integer.MAX_VALUE - 2);
+        inputNode.isOutput = true;
+        nodes.add(inputNode);
+        inputNode = new NodeGene(Integer.MAX_VALUE - 3);
+        inputNode.isOutput = true;
+        nodes.add(inputNode);
+
+        /*
+        inputs = (SNAKE_VIEW_SIZE * SNAKE_VIEW_SIZE) + 2 - 1;
+        outputs = (SNAKE_VIEW_SIZE * SNAKE_VIEW_SIZE) + 7 - 1;
+        */
 
         ////////
 
@@ -104,9 +120,11 @@ public class Genome implements Comparable{
 
     /**
      * Take in a seed for a snake game and play it to determine the fitness of this genome on that game
+     * This sets the fitness of the genome as a side effect
      *
      */
-    public int evaluateNetwork(int snakeSeed) {
+    public void evaluateNetwork(int snakeSeed) {
+
         Snake snakeGame = new Snake();
         snakeGame.restart(snakeSeed);
 
@@ -118,6 +136,7 @@ public class Genome implements Comparable{
             if(snakeGame.snakeX.getFirst() == snakeGame.appleX && snakeGame.snakeY.getFirst() == snakeGame.appleY) {
                 score += 100;
                 timeSinceLastApple = 0;
+                System.out.println("Ate me an apple :D");
             }
             score++; // Increment score for staying alive
             timeSinceLastApple++;
@@ -131,18 +150,146 @@ public class Genome implements Comparable{
             snakeGame.step(getNetworkDecision(snakeGame));
         }
 
-        return score;
+        fitness = score;
     }
 
     public Snake.Direction getNetworkDecision(Snake snakeGame) {
-        // What we're going to do is use recursion.
-        // Starting with the two output nodes, we call a method which takes in a node
-        // and it
-        return Snake.Direction.UP;
+        //System.out.println("COMPUTING NETWORK DECISION\n\n\n\n\n\n");
+        int[] snakeView = getSnakeView(snakeGame);
+        for(int i = 0; i < snakeView.length; i++) {
+            nodes.get(i).value = snakeView[i];
+        }
+
+        // Set apple pointer
+        if(snakeGame.appleX < snakeGame.snakeX.getFirst()) {
+            if(snakeGame.direction == Snake.Direction.UP) {
+                nodes.get(inputs - 1).value = -1; // Left of snake
+            } else if(snakeGame.direction == Snake.Direction.RIGHT) {
+                nodes.get(inputs - 2).value = -1; // Ahead of snake
+            } else if(snakeGame.direction == Snake.Direction.LEFT) {
+                nodes.get(inputs - 2).value = 1;
+            } else {
+                nodes.get(inputs - 1).value = 1;
+            }
+        } else if(snakeGame.appleX > snakeGame.snakeX.getFirst()) {
+            if(snakeGame.direction == Snake.Direction.UP) {
+                nodes.get(inputs - 1).value = 1; // Left of snake
+            } else if(snakeGame.direction == Snake.Direction.RIGHT) {
+                nodes.get(inputs - 2).value = 1; // Ahead of snake
+            } else if(snakeGame.direction == Snake.Direction.LEFT) {
+                nodes.get(inputs - 2).value = -1;
+            } else {
+                nodes.get(inputs - 1).value = -1;
+            }
+        }
+
+        if(snakeGame.appleY < snakeGame.snakeY.getFirst()) {
+            if(snakeGame.direction == Snake.Direction.UP) {
+                nodes.get(inputs - 2).value = -1;
+            } else if(snakeGame.direction == Snake.Direction.RIGHT) {
+                nodes.get(inputs - 1).value = 1;
+            } else if(snakeGame.direction == Snake.Direction.LEFT) {
+                nodes.get(inputs - 1).value = -1;
+            } else {
+                nodes.get(inputs - 2).value = 1;
+            }
+        } else if(snakeGame.appleY > snakeGame.snakeY.getFirst()) {
+            if(snakeGame.direction == Snake.Direction.UP) {
+                nodes.get(inputs - 2).value = -1; // Left of snake
+            } else if(snakeGame.direction == Snake.Direction.RIGHT) {
+                nodes.get(inputs - 1).value = -1; // Ahead of snake
+            } else if(snakeGame.direction == Snake.Direction.LEFT) {
+                nodes.get(inputs - 1).value = 1;
+            } else {
+                nodes.get(inputs - 2).value = 1;
+            }
+        }
+
+        // Initialize for recursion
+        for(int i = 0; i < connections.size(); i++) {
+            connections.get(i).output.inputs.add(connections.get(i).input);
+            //System.out.println("Connection from " + connections.get(i).input.number + " to " + connections.get(i).output.number);
+        }
+
+        for(int i = 0; i < nodes.size(); i++) {
+            if(i <= inputs) {
+                nodes.get(i).hasBeenComputed = true;
+            } else {
+                nodes.get(i).hasBeenComputed = false;
+                nodes.get(i).value = 0;
+            }
+
+            // Sort nodeGene's inputs based upon number to obtain a topological sorting
+            Collections.sort(nodes.get(i).inputs);
+        }
+
+        try{
+            recurseValues(nodes.get(inputs + 1));
+            recurseValues(nodes.get(inputs + 2));
+            recurseValues(nodes.get(inputs + 3));
+        } catch(Exception e) {
+            System.out.println("guh");
+            for(int i = 0; i < connections.size(); i++) {
+                connections.get(i).output.inputs.add(connections.get(i).input);
+                System.out.println("Connection from " + connections.get(i).input.number + " to " + connections.get(i).output.number);
+            }
+            System.exit(1);
+        }
+
+        if(nodes.get(inputs + 1).value > nodes.get(inputs + 2).value &&
+           nodes.get(inputs + 1).value > nodes.get(inputs + 3).value) {
+            // Turn left
+            if(snakeGame.direction == Snake.Direction.LEFT) {
+                return Snake.Direction.DOWN;
+            } else if(snakeGame.direction == Snake.Direction.DOWN) {
+                return Snake.Direction.RIGHT;
+            } else if(snakeGame.direction == Snake.Direction.RIGHT) {
+                return Snake.Direction.UP;
+            } else {
+                return Snake.Direction.LEFT;
+            }
+        } else if(nodes.get(inputs + 2).value > nodes.get(inputs + 1).value &&
+                  nodes.get(inputs + 2).value > nodes.get(inputs + 3).value) {
+            if(snakeGame.direction == Snake.Direction.LEFT) {
+                return Snake.Direction.UP;
+            } else if(snakeGame.direction == Snake.Direction.DOWN) {
+                return Snake.Direction.LEFT;
+            } else if(snakeGame.direction == Snake.Direction.RIGHT) {
+                return Snake.Direction.DOWN;
+            } else {
+                return Snake.Direction.RIGHT;
+            }
+        } else {
+            return snakeGame.direction;
+        }
+    }
+
+    public void recurseValues(NodeGene nodeGene) {
+        if(nodeGene.hasBeenComputed) {
+            return;
+        }
+
+        for(int i = 0; i < nodeGene.inputs.size(); i++) {
+            if(!nodeGene.inputs.get(i).hasBeenComputed) {
+                recurseValues(nodeGene.inputs.get(i));
+            }
+        }
+
+        double sum = 0;
+
+        for(int i = 0; i < nodeGene.inputs.size(); i++) {
+            sum += nodeGene.inputs.get(i).value;
+        }
+
+        // Sigmoid function
+        nodeGene.value = 1 / (1 + Math.pow(Math.E, -1 * sum));
+        nodeGene.hasBeenComputed = true;
     }
 
     public int[] getSnakeView(Snake snakeGame) {
         int[][] initialView = new int[SNAKE_VIEW_SIZE][SNAKE_VIEW_SIZE];
+
+        int snakeOffset = (int)SNAKE_VIEW_SIZE / 2;
 
         // The Snake's head is at the center of the view size
         // So, when we have 5 for our view size, the snake's head is at (2,2)
@@ -153,15 +300,20 @@ public class Genome implements Comparable{
             int snakeX = snakeGame.snakeX.getFirst();
             int snakeY = snakeGame.snakeY.getFirst();
 
-            int snakeOffset = (int)SNAKE_VIEW_SIZE / 2;
-
             int distX = gameX - snakeX;
             int distY = gameY - snakeY;
 
             if(distX >= -snakeOffset && distX <= snakeOffset &&
                distY >= -snakeOffset && distY <= snakeOffset) {
-                initialView[distX + snakeOffset][distY + snakeOffset] = 1;
+                initialView[distX + snakeOffset][distY + snakeOffset] = -1;
             }
+        }
+
+        int distX = snakeGame.appleX - snakeGame.snakeX.getFirst();
+        int distY = snakeGame.appleY - snakeGame.snakeY.getFirst();
+        if(distX >= -snakeOffset && distX <= snakeOffset &&
+           distY >= -snakeOffset && distY <= snakeOffset) {
+            initialView[distX + snakeOffset][distY + snakeOffset] = 1;
         }
 
         int[] finalView = new int[SNAKE_VIEW_SIZE * SNAKE_VIEW_SIZE];
@@ -201,7 +353,7 @@ public class Genome implements Comparable{
 
         oldGene.enabled = false;
 
-        NodeGene newNode = new NodeGene(oldGene.innovation);
+        NodeGene newNode = new NodeGene(oldGene.innovation + 100);
         nodes.add(newNode);
 
         ConnectionGene newGene1 = new ConnectionGene(oldGene);
@@ -224,7 +376,7 @@ public class Genome implements Comparable{
         for(int i = 0; i < connections.size(); i++){
             gene = connections.get(i);
             if (rand.nextDouble() < PERTURB_CHANCE) {
-                gene.weight=gene.weight + (rand.nextDouble() * 2 - 1) * mutationRates.get("step");
+                gene.weight = gene.weight + (rand.nextDouble() * 2 - 1) * mutationRates.get("step");
             } else {
                 gene.weight = rand.nextDouble() * 4 - 2;
             }
@@ -247,26 +399,35 @@ public class Genome implements Comparable{
             newGene.enabled = true;
             newGene.weight = rand.nextDouble() * 4 - 2;
 
-            /*
-            if(forceBias) {
-                newGene.input = connections.get(0);
+            if(node1.equals(node2)) {
+                continue;
             }
+
+            /*
+              if(forceBias) {
+              newGene.input = connections.get(0);
+              }
             */
 
-        } while(!containsLink(newGene)); //do until we get a new link
+        } while(containsLink(newGene)); //do until we get a new link
 
         //genePool.genes.add(newGene);
-        genePool.getNewInnovation(newGene);
-        connections.add(newGene);
+        if(!newGene.input.isOutput && !newGene.input.equals(newGene.output)) {
+            genePool.getNewInnovation(newGene);
+            connections.add(newGene);
+        }
     }
 
     //checks if there is already a link between two nodes
     public boolean containsLink(ConnectionGene link){
         ConnectionGene tempGene;
         for(int i = 0; i < connections.size(); i++) {
-            tempGene= connections.get(i);
+            tempGene = connections.get(i);
 
-            if(tempGene.input == link.input && tempGene.output == link.output) {
+            if(tempGene.input.equals(link.input) && tempGene.output.equals(link.output) &&
+               tempGene.input.number < tempGene.output.number &&
+               !tempGene.input.isOutput &&
+               !(tempGene.input.isOutput && tempGene.output.isOutput)) {
                 return true;
             }
         }
@@ -276,16 +437,21 @@ public class Genome implements Comparable{
 
     //enables or disables a node
     public Genome enableDisableMutate(boolean enables) {
-        LinkedList<ConnectionGene> candidates =new LinkedList<ConnectionGene>();
+        LinkedList<ConnectionGene> candidates = new LinkedList<ConnectionGene>();
         ConnectionGene tempGene;
 
         for(int i = 0; i < connections.size(); i++) {
             tempGene= connections.get(i);
-            if (tempGene.enabled == (!enables))
+            if (tempGene.enabled == (!enables)) {
                 candidates.add(tempGene);
+            }
         }
-        ConnectionGene selected = candidates.get(rand.nextInt(candidates.size()));
-        selected.enabled = enables;
+
+        if(candidates.size() > 0) {
+            ConnectionGene selected = candidates.get(rand.nextInt(candidates.size()));
+            selected.enabled = enables;
+        }
+
         return this;
     }
 
@@ -312,7 +478,7 @@ public class Genome implements Comparable{
 
         //mutate link
         p = mutationRates.get("link");
-        while(p > 0) {
+        while(p > 0){
             if(rand.nextDouble() < p) {
                 linkMutate();
             }
@@ -346,7 +512,6 @@ public class Genome implements Comparable{
 
     @Override
     public int compareTo(Object o){
-
         return this.fitness - ((Genome)o).fitness;
     }
 
@@ -358,59 +523,69 @@ public class Genome implements Comparable{
 
     private double disjoint(LinkedList<ConnectionGene> genes1, LinkedList<ConnectionGene> genes2)
     {
-      HashMap<Integer, Boolean> i1 = new HashMap<Integer, Boolean>();
-      for(int i = 0; i < genes1.size(); i++)
-      {
-        ConnectionGene gene = genes1.get(i);
-        i1.put(gene.innovation, true);
-      }
-      HashMap<Integer, Boolean> i2 = new HashMap<Integer, Boolean>();
-      for(int i = 0; i < genes2.size(); i++)
-      {
-        ConnectionGene gene = genes2.get(i);
-        i2.put(gene.innovation, true);
-      }
-      int disjointGenes = 0;
-      for(int i = 0; i < genes1.size(); i++)
-      {
-        ConnectionGene gene = genes1.get(i);
-        if(i2.get(gene.innovation) == null)
-        {
-          disjointGenes = disjointGenes + 1;
+        HashMap<Integer, Boolean> i1 = new HashMap<Integer, Boolean>();
+        for(int i = 0; i < genes1.size(); i++)
+            {
+                ConnectionGene gene = genes1.get(i);
+                i1.put(gene.innovation, true);
+            }
+        HashMap<Integer, Boolean> i2 = new HashMap<Integer, Boolean>();
+        for(int i = 0; i < genes2.size(); i++)
+            {
+                ConnectionGene gene = genes2.get(i);
+                i2.put(gene.innovation, true);
+            }
+        int disjointGenes = 0;
+        for(int i = 0; i < genes1.size(); i++)
+            {
+                ConnectionGene gene = genes1.get(i);
+                if(i2.get(gene.innovation) == null)
+                    {
+                        disjointGenes = disjointGenes + 1;
+                    }
+            }
+        for(int i = 0; i < genes2.size(); i++)
+            {
+                ConnectionGene gene = genes2.get(i);
+                if(i1.get(gene.innovation) == null)
+                    {
+                        disjointGenes = disjointGenes + 1;
+                    }
+            }
+
+        int n = Math.max(genes1.size(), genes2.size());
+        if(n == 0) {
+            return 0;
+        } else {
+            return disjointGenes / n;
         }
-      }
-      for(int i = 0; i < genes2.size(); i++)
-      {
-        ConnectionGene gene = genes2.get(i);
-        if(i1.get(gene.innovation) == null)
-        {
-          disjointGenes = disjointGenes + 1;
-        }
-      }
-      int n = Math.max(genes1.size(), genes2.size());
-      return disjointGenes / n;
     }
 
     private double weights(LinkedList<ConnectionGene> genes1, LinkedList<ConnectionGene> genes2)
     {
-      HashMap<Integer, ConnectionGene> i2 = new HashMap<Integer, ConnectionGene>();
-      for(int i = 0; i < genes2.size(); i++)
-      {
-        ConnectionGene gene = genes2.get(i);
-        i2.put(gene.innovation, gene);
-      }
-      int sum = 0;
-      int coincident = 0;
-      for(int i = 0; i < genes1.size(); i++)
-      {
-        ConnectionGene gene = genes1.get(i);
-        if(i2.get(gene.innovation) != null)
-        {
-          ConnectionGene gene2 = i2.get(gene.innovation);
-          sum = sum + (int) Math.abs(gene.weight - gene2.weight);
-          coincident = coincident + 1;
+        HashMap<Integer, ConnectionGene> i2 = new HashMap<Integer, ConnectionGene>();
+        for(int i = 0; i < genes2.size(); i++)
+            {
+                ConnectionGene gene = genes2.get(i);
+                i2.put(gene.innovation, gene);
+            }
+        int sum = 0;
+        int coincident = 0;
+        for(int i = 0; i < genes1.size(); i++)
+            {
+                ConnectionGene gene = genes1.get(i);
+                if(i2.get(gene.innovation) != null)
+                    {
+                        ConnectionGene gene2 = i2.get(gene.innovation);
+                        sum = sum + (int) Math.abs(gene.weight - gene2.weight);
+                        coincident = coincident + 1;
+                    }
+            }
+
+        if(coincident != 0) {
+            return sum / coincident;
+        } else {
+            return 0;
         }
-      }
-      return sum / coincident;
     }
 }

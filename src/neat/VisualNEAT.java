@@ -7,7 +7,7 @@ import java.util.LinkedList;
  * Allows a human player to play the game of snake, using the game described in the Snake class
  *
  */
-public class HumanPlayer extends JFrame implements ActionListener {
+public class VisualNEAT extends JFrame implements ActionListener {
 
     // FINAL VALUES
     private static final int WINDOW_SIZE = 600;
@@ -30,29 +30,6 @@ public class HumanPlayer extends JFrame implements ActionListener {
     static private boolean title;
     // A boolean used to make a flickering effect upon loss
     static private boolean flicker;
-
-    // Process the player's key input
-    protected void processKeyEvent(final KeyEvent ke) {
-        if(KeyEvent.KEY_PRESSED == ke.getID()) {
-            // If the user pressed ENTER and we're on the title, begin the game
-            if(ke.getKeyCode() == KeyEvent.VK_ENTER) {
-                title = false;
-                snakeGame.restart(5);
-                entered.clear();
-            }
-
-            // Add movement keys to entered
-            if(ke.getKeyCode() == KeyEvent.VK_UP) {
-                entered.add(Snake.Direction.UP);
-            } else if(ke.getKeyCode() == KeyEvent.VK_DOWN) {
-                entered.add(Snake.Direction.DOWN);
-            } else if(ke.getKeyCode() == KeyEvent.VK_LEFT) {
-                entered.add(Snake.Direction.LEFT);
-            }  else if(ke.getKeyCode() == KeyEvent.VK_RIGHT) {
-                entered.add(Snake.Direction.RIGHT);
-            }
-        }
-    }
 
     // Repaint the canvas
     public void paint(final Graphics gr) {
@@ -127,9 +104,16 @@ public class HumanPlayer extends JFrame implements ActionListener {
     }
 
     // Initializes the game
-    public HumanPlayer() {
+    public VisualNEAT() {
         // Set the window title
         super("Snake Game");
+
+        Generation generation = new Generation(1);
+
+        for(int i = 0; i < 30; i++) {
+            System.out.println("Generating new generation " + i);
+            generation = generation.createNextGeneration(5);
+        }
 
         snakeGame = new Snake();
         snakeGame.restart(5);
