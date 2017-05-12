@@ -12,6 +12,10 @@ public class Genome implements Comparable{
 
     // CONSTANTS
     public static double PERTURB_CHANCE = 0.90;
+    // Should be odd
+    public static int SNAKE_VIEW_SIZE = 9;
+    // The number of steps the snake can go without getting the apple before we kill it
+    public static int TOO_LONG_ALIVE = 1000;
 
     // The list of all the node genes
     // The structure has the first `inputs` nodes being input nodes and the last `outputs` nodes being outputs
@@ -41,10 +45,21 @@ public class Genome implements Comparable{
      * This is just a genome with no connections or nodes beyond sensor and output nodes
      *
      */
-    public Genome(List<NodeGene> sensorNodes, List<NodeGene> outputNodes, GenePool pool) {
+    public Genome(GenePool pool) {
         nodes = new LinkedList<NodeGene>();
-        nodes.addAll(sensorNodes);
-        nodes.addAll(outputNodes);
+
+        // Add all the sensor and output nodes
+        // We have (SNAKE_VIEW_SIZE * SNAKE_VIEW_SIZE) snake view nodes, 4 apple indicator nodes, and 2 output nodes
+        for(int i = 0; i < (SNAKE_VIEW_SIZE * SNAKE_VIEW_SIZE) + 6; i++) {
+            NodeGene inputNode = new NodeGene(i);
+            nodes.add(inputNode);
+        }
+
+        inputs = (SNAKE_VIEW_SIZE * SNAKE_VIEW_SIZE) + 4;
+        outputs = (SNAKE_VIEW_SIZE * SNAKE_VIEW_SIZE) + 6;
+
+        ////////
+
         genePool = pool;
         connections = new LinkedList<ConnectionGene>();
 
@@ -66,7 +81,80 @@ public class Genome implements Comparable{
      *
      */
     public int evaluateNetwork(int snakeSeed) {
-        return 0;
+        Snake snakeGame = new Snake();
+        snakeGame.restart(snakeSeed);
+
+        int score = 0;
+        int timeSinceLastApple = 0;
+
+        while(!snakeGame.lost && !tooLongAlive) {
+            // If snake gets the apple on this turn, add 100
+            if(snakeGame.snakeX.getFirst() == snakeGame.appleX && snakeGame.snakeY.getFirst() == snakeGame.appleY) {
+                score += 100;
+                timeSinceLastApple = 0;
+            }
+            score++; // Increment score for staying alive
+            timeSinceLastApple++;
+
+            if(timeSinceLastApple > TOO_LONG_ALIVE) {
+                // Kill the snake if it's been alive too long before getting another apple
+                break;
+            }
+
+            // Step game
+            snakeGame.step(getNetworkDecision(snakeGame));
+        }
+
+        return score;
+    }
+
+    public Snake.Direction getNetworkDecision(Snake snakeGame) {
+        // What we're going to do is use recursion.
+        // Starting with the two output nodes, we call a method which takes in a node
+        // and it
+    }
+
+    public int[] getSnakeView(Snake snakeGame) {
+        int[][] initialView = new int[SNAKE_VIEW_SIZE][SNAKE_VIEW_SIZE];
+
+        // The Snake's head is at the center of the view size
+        // So, when we have 5 for our view size, the snake's head is at (2,2)
+        for(int i = 0; i < snakeGame.snakeX.size(); i++) {
+            int gameX = snakeGame.snakeX.get(i);
+            int gameY = snakeGame.snakeY.get(i);
+
+            int snakeX = snakeGame.snakeX.getFirst();
+            int snakeY = snakeGame.snakeY.getFirst();
+
+            int snakeOffset = (int)SNAKE_VIEW_SIZE / 2;
+
+            int distX = gameX - snakeX;
+            int distY = gameY - snakeY;
+
+            if(distX >= -snakeOffset && distX <= snakeOffset &&
+               distY >= -snakeOffset && distY <= snakeOffset) {
+                initialView[distX + snakeOffset][distY + snakeOffset] = 1;
+            }
+        }
+
+        int[] finalView = new int[SNAKE_VIEW_SIZE * SNAKE_VIEW_SIZE];
+
+        // Ugly code for turning game to match snake's head
+        for(int i = 0; i < SNAKE_VIEW_SIZE; i++) {
+            for(int j = 0; j < SNAKE_VIEW_SIZE; j++) {
+                if(snakeGame.direction == Snake.Direction.UP) { // Up
+                    finalView[j * SNAKE_VIEW_SIZE + i] = initialView[i][j];
+                } else if(snakeGame.direction == Snake.Direction.RIGHT) { // Right
+                    finalView[j * SNAKE_VIEW_SIZE + i] = initialView[j][SNAKE_VIEW_SIZE - 1 - i];
+                } else if(snakeGame.direction == Snake.Direction.DOWN) { // Down
+                    finalView[j * SNAKE_VIEW_SIZE + i] = initialView[SNAKE_VIEW_SIZE - 1 - i][SNAKE_VIEW_SIZE - 1 - j];
+                } else if(snakeGame.direction == Snake.Direction.LEFT) { // Left
+                    finalView[j * SNAKE_VIEW_SIZE + i] = initialView[SNAKE_VIEW_SIZE - 1 - j][i];
+                }
+            }
+        }
+
+        return finalView;
     }
 
     /**
