@@ -38,6 +38,9 @@ public class Genome implements Comparable{
 
     // A Random object to use so we don't have to keep making new Random's
     private Random rand;
+    private double DeltaDisjoint = 2.0;
+    private double DeltaWeights = 0.4;
+    private double DeltaThreshold = 1.0;
 
 
     /**
@@ -75,6 +78,29 @@ public class Genome implements Comparable{
         mutationRates.put("enable", .2);
     }
 
+    /**
+     * Builds a copy of the given genome
+     *
+     */
+    public Genome(Genome other) {
+        // Copy nodes
+        nodes = new LinkedList<NodeGene>();
+        for(NodeGene ng : other.nodes) {
+            nodes.add(new NodeGene(ng));
+        }
+
+        genePool = other.genePool;
+
+        // Copy connection genes
+        connections = new LinkedList<ConnectionGene>();
+        for(ConnectionGene cg : other.connections) {
+            connections.add(cg);
+        }
+
+        rand = new Random();
+
+        mutationRates = new HashMap<String, Double>(other.mutationRates);
+    }
 
     /**
      * Take in a seed for a snake game and play it to determine the fitness of this genome on that game
@@ -324,8 +350,67 @@ public class Genome implements Comparable{
         return this.fitness - ((Genome)o).fitness;
     }
 
-    public boolean sameSpecies(Genome other){
-        return true;
+    public boolean sameSpecies(Genome genome2){
+        double dd = DeltaDisjoint*disjoint(this.connections, genome2.connections);
+        double dw = DeltaWeights*weights(this.connections, genome2.connections);
+        return dd + dw < DeltaThreshold;
     }
 
+    private double disjoint(LinkedList<ConnectionGene> genes1, LinkedList<ConnectionGene> genes2)
+    {
+      HashMap<Integer, Boolean> i1 = new HashMap<Integer, Boolean>();
+      for(int i = 0; i < genes1.size(); i++)
+      {
+        ConnectionGene gene = genes1.get(i);
+        i1.put(gene.innovation, true);
+      }
+      HashMap<Integer, Boolean> i2 = new HashMap<Integer, Boolean>();
+      for(int i = 0; i < genes2.size(); i++)
+      {
+        ConnectionGene gene = genes2.get(i);
+        i2.put(gene.innovation, true);
+      }
+      int disjointGenes = 0;
+      for(int i = 0; i < genes1.size(); i++)
+      {
+        ConnectionGene gene = genes1.get(i);
+        if(i2.get(gene.innovation) == null)
+        {
+          disjointGenes = disjointGenes + 1;
+        }
+      }
+      for(int i = 0; i < genes2.size(); i++)
+      {
+        ConnectionGene gene = genes2.get(i);
+        if(i1.get(gene.innovation) == null)
+        {
+          disjointGenes = disjointGenes + 1;
+        }
+      }
+      int n = Math.max(genes1.size(), genes2.size());
+      return disjointGenes / n;
+    }
+
+    private double weights(LinkedList<ConnectionGene> genes1, LinkedList<ConnectionGene> genes2)
+    {
+      HashMap<Integer, ConnectionGene> i2 = new HashMap<Integer, ConnectionGene>();
+      for(int i = 0; i < genes2.size(); i++)
+      {
+        ConnectionGene gene = genes2.get(i);
+        i2.put(gene.innovation, gene);
+      }
+      int sum = 0;
+      int coincident = 0;
+      for(int i = 0; i < genes1.size(); i++)
+      {
+        ConnectionGene gene = genes1.get(i);
+        if(i2.get(gene.innovation) != null)
+        {
+          ConnectionGene gene2 = i2.get(gene.innovation);
+          sum = sum + (int) Math.abs(gene.weight - gene2.weight);
+          coincident = coincident + 1;
+        }
+      }
+      return sum / coincident;
+    }
 }
