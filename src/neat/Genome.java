@@ -34,6 +34,9 @@ public class Genome implements Comparable{
 
     // A Random object to use so we don't have to keep making new Random's
     private Random rand;
+    private double DeltaDisjoint = 2.0
+    private double DeltaWeights = 0.4
+    private double DeltaThreshold = 1.0
 
 
     /**
@@ -233,7 +236,65 @@ public class Genome implements Comparable{
       return this.fitness-g2.fitness;
     }
     public boolean sameSpecies(){
-      return true;
+        double dd = DeltaDisjoint*disjoint(genome1.connections, genome2.connections);
+        double dw = DeltaWeights*weights(genome1.connections, genome2.connnections);
+        return dd + dw < DeltaThreshold;
+    }
+    private double disjoint(LinkedList<ConnectionGene> genes1, LinkedList<ConnectionGene> genes2)
+    {
+      HashMap<Integer, Boolean> i1 = new HashMap<Integer, Boolean>();
+      for(int i = 0; i < genes1.size(); i++)
+      {
+        ConnectionGene gene = genes1.get(i);
+        i1.put(gene.innovation, true);
+      }
+      HashMap<Integer, Boolean> i2 = new HashMap<Integer, Boolean>();
+      for(int i = 0; i < genes2.size(); i++)
+      {
+        ConectionGene gene = genes2.get(i);
+        i2.put(gene.innovation, true);
+      }
+      int disjointGenes = 0;
+      for(int i = 0; i < genes1.size(); i++)
+      {
+        ConnectionGene gene = genes1.get(i);
+        if(i2.get(gene.innovation) == null)
+        {
+          disjointGenes = disjointGenes + 1;
+        }
+      }
+      for(int i = 0; i < genes2.size(); i++)
+      {
+        ConnectionGene gene = genes2.get(i);
+        if(i1.get(gene.innovation) == null)
+        {
+          disjointGenes = disjointGenes + 1;
+        }
+      }
+      int n = Math.max(genes1.size(), genes2.size())
+      return disjointGenes / n;
+    }
+    private double weights(LinkedList<ConnectionGene> genes1, LinkedList<ConnectionGene> genes2)
+    {
+      HashMap<Integer, ConnectionGene> i2 = new HashMap<Integer, ConnectionGene>();
+      for(int i = 0; i < genes2.size())
+      {
+        ConnectionGene gene = genes2.get(i);
+        i2.put(gene.innovation, gene);
+      }
+      int sum = 0;
+      int coincident = 0;
+      for(int i = 0; i < genes1.size(); i++)
+      {
+        ConnectionGene gene = genes1.get(i);
+        if(i2.get(gene.innovation) != null)
+        {
+          ConnectionGene gene2 = i2.get(gene.innovation);
+          sum = sum + Math.abs(gene.weight - gene2.weight);
+          coincident = coincident + 1;
+        }
+      }
+      return sum / coincident;
     }
 
 }

@@ -8,6 +8,7 @@ public class Species {
     public int topFitness;
     public int staleness;
     public double averageFitness;
+    public double CrossoverChance = 0.75;
     public LinkedList<Genome> genomes = new LinkedList<Genome>();
 
 
@@ -40,11 +41,11 @@ public class Species {
         	}
         }
 
-        Iterator<E> iter = g1.mutationRates.entrySet().iterator();
+        Iterator<String, double> iter = g1.mutationRates.entrySet().iterator();
         while(iter.hasNext())
         {
         	Map.Entry pair = (Map.Entry)iter.next();
-        	child.mutationRates[pair.getKey()] = pair.getValue();
+        	child.mutationRates.put(pair.getKey(), pair.getValue());
         }
 
 
@@ -53,7 +54,21 @@ public class Species {
 
 
     public void cull(boolean cullToTop){
-      for(int i = 0; i < )
+      Collections.sort(genomes);
+      if(cullToTop)
+      {
+        for(int i = 1; i < genomes.size(); i++)
+        {
+          genomes.remove(i);
+        }
+      }
+      else
+      {
+        for(int i = 0; i < genomes.size() / 2; i++)
+        {
+          genomes.remove((genomes.size() - 1) - i);
+        }
+      }
     }
 
     public double calculateAverageFitness()
@@ -66,6 +81,22 @@ public class Species {
     }
 
     public Genome breedChild(){
+        Genome g3;
+        int randChance = rand.nextDouble();
+        if(randChance < crossover)
+        {
+          Genome g1 = genomes.get(rand.nextInt(genes.size()));
+          Genome g2 = genomes.get(rand.nextInt(genes.size()));
+          g3 = crossover(g1, g2);
+        }
+        else
+        {
+          Genome g1 = genomes.get(rand.nextInt(genes.size()));
+          g3 = new Genome(g1);
+        }
+        g3.mutate();
+
+        return g3;
     }
 
 }
