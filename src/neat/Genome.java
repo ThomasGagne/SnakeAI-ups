@@ -31,9 +31,9 @@ public class Genome implements Comparable{
     public LinkedList<ConnectionGene> connections;
 
     // The stored fitness
-
-    public double fitness = -1;
+    public int fitness = -1;
     public HashMap<String, Double> mutationRates;
+    public int globalRank;
     public GenePool genePool;
 
     // A Random object to use so we don't have to keep making new Random's
@@ -87,7 +87,7 @@ public class Genome implements Comparable{
         int score = 0;
         int timeSinceLastApple = 0;
 
-        while(!snakeGame.lost && !tooLongAlive) {
+        while(!snakeGame.lost) {
             // If snake gets the apple on this turn, add 100
             if(snakeGame.snakeX.getFirst() == snakeGame.appleX && snakeGame.snakeY.getFirst() == snakeGame.appleY) {
                 score += 100;
@@ -112,6 +112,7 @@ public class Genome implements Comparable{
         // What we're going to do is use recursion.
         // Starting with the two output nodes, we call a method which takes in a node
         // and it
+        return Snake.Direction.UP;
     }
 
     public int[] getSnakeView(Snake snakeGame) {
@@ -168,14 +169,13 @@ public class Genome implements Comparable{
 
         ConnectionGene oldGene;
 
-        do{
+        do {
             oldGene = connections.get(rand.nextInt(connections.size()));
-        }
-        while(!oldGene.enabled); // grab a random enabled node
+        } while(!oldGene.enabled); // grab a random enabled node
 
         oldGene.enabled = false;
 
-        NodeGene newNode = new NodeGene();
+        NodeGene newNode = new NodeGene(oldGene.innovation);
         nodes.add(newNode);
 
         ConnectionGene newGene1 = new ConnectionGene(oldGene);
@@ -317,11 +317,15 @@ public class Genome implements Comparable{
             p--;
         }
     }
-    public int compareTo(Genome g2){
-      return this.fitness-g2.fitness;
+
+    @Override
+    public int compareTo(Object o){
+
+        return this.fitness - ((Genome)o).fitness;
     }
-    public boolean sameSpecies(){
-      return true;
+
+    public boolean sameSpecies(Genome other){
+        return true;
     }
 
 }

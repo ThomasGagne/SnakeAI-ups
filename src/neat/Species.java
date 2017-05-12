@@ -1,7 +1,8 @@
-import  java.util.LinkedList;
+import java.util.LinkedList;
 import java.util.Random;
 
 public class Species {
+
     public Random rand = new Random();
     public int topFitness;
     public int staleness;
@@ -16,16 +17,20 @@ public class Species {
 
     }
 
-    public double calculateAverageFitness()
-    {
-      double sum=0.0;
-      for (int i=0; i<genomes.size())
-        sum+=genomes.get(i);
-      averageFitness= sum/genomes.size();
-      return averageFitness;
+    public double calculateAverageFitness() {
+        double sum = 0.0;
+
+        for(int i = 0; i < genomes.size(); i++) {
+            sum += genomes.get(i).fitness;
+        }
+
+        averageFitness = sum / genomes.size();
+
+        return averageFitness;
     }
 
     public Genome breedChild(){
+        return null;
     }
 
 }
