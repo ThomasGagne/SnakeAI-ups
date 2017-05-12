@@ -8,7 +8,7 @@ import java.util.Iterator;
  * A class to embody a single genome in the genetic algorithm
  *
  */
-public class Genome {
+public class Genome implements Comparable{
 
     // CONSTANTS
     public static double PERTURB_CHANCE = 0.90;
@@ -27,12 +27,14 @@ public class Genome {
     public LinkedList<ConnectionGene> connections;
 
     // The stored fitness
+
     public double fitness = -1;
     public HashMap<String, Double> mutationRates;
     public GenePool genePool;
 
     // A Random object to use so we don't have to keep making new Random's
     private Random rand;
+
 
     /**
      * Builds an initial *blank* genome
@@ -226,6 +228,12 @@ public class Genome {
             }
             p--;
         }
+    }
+    public int compareTo(Genome g2){
+      return this.fitness-g2.fitness;
+    }
+    public boolean sameSpecies(){
+      return true;
     }
 
 }
